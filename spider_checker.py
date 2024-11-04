@@ -44,7 +44,7 @@ def contar_ocorrencias(diretorio, terms):
         "no_ad_base_gazette",
         "no_ad_base_subclass"
     }
-
+    seen_base_classes = set()
     counters = {c: 0 for c in counter_names}
 
     # Percorre todos os arquivos e subdiretórios
@@ -80,6 +80,8 @@ def contar_ocorrencias(diretorio, terms):
                     flags=re.MULTILINE
                 )
 
+                base_class = re.findall(r"Spider\((\w+)\):", conteudo)
+
                 allowed_domains = []
                 if allowed_domains_raw:
                     allowed_domains = eval(allowed_domains_raw[0])
@@ -89,6 +91,9 @@ def contar_ocorrencias(diretorio, terms):
                     B = urlparse(base_url)
                     if A == B.netloc.replace("www.", ""):
                         counters["confirmed_redundant_ad"] += 1
+
+                        if base_class:
+                            seen_base_classes.add(base_class[0])
                     else:
                         counters["possible_redundant_ad"] += 1
                         # w = "-" * 10
@@ -104,6 +109,13 @@ def contar_ocorrencias(diretorio, terms):
                     counters["no_ad_base_gazette"] += 1
                 else:
                     counters["no_ad_base_subclass"] += 1
+
+    print(
+        f"Found {len(seen_base_classes)} different "
+        "intermediate classes on Spiders with redundant 'allowed_domains'."
+    )
+    for base_class in seen_base_classes:
+        print(base_class)
 
     return counters
 
