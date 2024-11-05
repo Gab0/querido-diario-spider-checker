@@ -3,7 +3,7 @@
 import argparse
 import os
 import re
-
+import pyaml
 from urllib.parse import urlparse
 
 
@@ -44,7 +44,7 @@ def contar_ocorrencias(diretorio, terms):
         "no_ad_base_gazette",
         "no_ad_base_subclass"
     }
-    seen_base_classes = set()
+    seen_base_classes = {}
     counters = {c: 0 for c in counter_names}
 
     # Percorre todos os arquivos e subdiretórios
@@ -93,7 +93,10 @@ def contar_ocorrencias(diretorio, terms):
                         counters["confirmed_redundant_ad"] += 1
 
                         if base_class:
-                            seen_base_classes.add(base_class[0])
+                            bc = base_class[0]
+                            if bc not in seen_base_classes:
+                                seen_base_classes[bc] = set()
+                            seen_base_classes[bc].add(file)
                     else:
                         counters["possible_redundant_ad"] += 1
                         # w = "-" * 10
@@ -112,10 +115,10 @@ def contar_ocorrencias(diretorio, terms):
 
     print(
         f"Found {len(seen_base_classes)} different "
-        "intermediate classes on Spiders with redundant 'allowed_domains'."
+        "intermediate classes on Spiders with redundant 'allowed_domains'. "
+        "Summary:"
     )
-    for base_class in seen_base_classes:
-        print(base_class)
+    print(pyaml.dumps(seen_base_classes))
 
     return counters
 
